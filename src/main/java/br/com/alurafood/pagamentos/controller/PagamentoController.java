@@ -1,21 +1,16 @@
 package br.com.alurafood.pagamentos.controller;
 
 import br.com.alurafood.pagamentos.dto.PagamentoDto;
+import br.com.alurafood.pagamentos.dto.PagamentoResponseDto;
 import br.com.alurafood.pagamentos.service.PagamentoService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
@@ -36,8 +31,8 @@ public class PagamentoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PagamentoDto> detalharPagamento(@PathVariable @NotNull long id) {
-        PagamentoDto dto =  service.obterPorId(id);
+    public ResponseEntity<PagamentoResponseDto> detalharPagamento(@PathVariable @NotNull long id) throws JsonProcessingException {
+        PagamentoResponseDto dto =  service.obterPorId(id);
         return ResponseEntity.ok(dto);
     }
 
@@ -54,6 +49,17 @@ public class PagamentoController {
         PagamentoDto atualizado = service.atualizarPagamento(id, dto);
         return ResponseEntity.ok(atualizado);
     }
+
+    @PatchMapping("/{id}/confirmar")
+    @CircuitBreaker(name = "atualizaPedido", fallbackMethod = "pagamentoAutorizadoComIntegracaoPendente")
+    public void confirmarPagamento(@PathVariable @NotNull Long id) {
+        service.confirmarPagamento(id);
+    }
+
+    public void pagamentoAutorizadoComIntegracaoPendente(Long id, Exception e) {
+        service.alteraStatus(id);
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<PagamentoDto> remover(@PathVariable @NotNull Long id) {

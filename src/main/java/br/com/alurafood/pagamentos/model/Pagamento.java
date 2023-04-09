@@ -1,5 +1,6 @@
 package br.com.alurafood.pagamentos.model;
 
+import br.com.alurafood.pagamentos.dto.ItemDoPedidoDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "pagamentos")
